@@ -135,7 +135,7 @@ public class CreateMode extends Mode {
                             )
                     );
                 }
-                // CASE 4: neither exist → create start, then connect (your fallback)
+                // CASE 4: neither exist → create start, then connect
                 else {
 
                     PacketDistributor.sendToServer(
