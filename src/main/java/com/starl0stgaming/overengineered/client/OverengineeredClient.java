@@ -6,5 +6,15 @@ import net.minecraft.client.Minecraft;
 public class OverengineeredClient {
     public static final Minecraft MC_CLIENT = Minecraft.getInstance();
 
+    public static double mouseScrollDelta;
+
+    public static double getMouseScrollDelta() {
+        return mouseScrollDelta;
+    }
+
+    public static void setMouseScrollDelta(double mouseScrollDelta) {
+        OverengineeredClient.mouseScrollDelta = mouseScrollDelta;
+    }
+
     public static final OutlineRenderer OUTLINE_RENDERER = new OutlineRenderer();
 }

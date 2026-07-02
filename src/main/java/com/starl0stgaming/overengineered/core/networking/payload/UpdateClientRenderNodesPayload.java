@@ -25,7 +25,7 @@ public record UpdateClientRenderNodesPayload(
             ByteBufCodecs.collection(
                     HashSet::new,
                     GridNode.STREAM_CODEC,
-                    256
+                    16545
             ), UpdateClientRenderNodesPayload::renderNodes,
             UpdateClientRenderNodesPayload::new
     );

@@ -87,7 +87,7 @@ public class GridNode {
         var node = new GridNode(gridPos.pos(), gridPos.x(), gridPos.y(), gridPos.z());
         network.addNode(node);
         if(!network.getNodes().containsValue(connectTo)) throw new IllegalArgumentException("Passed connectTo node is not in same network as passed network!");
-        if(!network.addConnection(node.getIdentifier(), connectTo.getIdentifier())) throw new RuntimeException("Failed to connect both nodes");
+        if(!network.addConnection(node.getIdentifier(), connectTo.getIdentifier())) return null;
         var storage = LevelGridStorage.get(level);
         storage.updateSpatialIndex(gridPos, node);
         GridNetworking.updateNearbyPlayers(level, storage, gridPos);
@@ -107,7 +107,7 @@ public class GridNode {
         var storage = LevelGridStorage.get(level);
         var network = storage.getNetwork(connectTo.getParentNetwork());
         network.addNode(node);
-        if(!network.addConnection(node.getIdentifier(), connectTo.getIdentifier())) throw new RuntimeException("Failed to connect both nodes");
+        if(!network.addConnection(node.getIdentifier(), connectTo.getIdentifier())) return null;
         storage.updateSpatialIndex(gridPos, node);
         GridNetworking.updateNearbyPlayers(level, storage, gridPos);
         return node;
@@ -132,7 +132,7 @@ public class GridNode {
         } else if(storage.getNodeFromPos(connectTo) != null) {
             network = storage.getNetwork(storage.getNodeFromPos(connectTo));
             network.addNode(node);
-            if(!network.addConnection(node.getIdentifier(), storage.getNodeFromPos(connectTo).getIdentifier())) throw new RuntimeException("Failed to connect both nodes");
+            if(!network.addConnection(node.getIdentifier(), storage.getNodeFromPos(connectTo).getIdentifier())) return null;
         }
         storage.updateSpatialIndex(gridPos, node);
         GridNetworking.updateNearbyPlayers(level, storage, gridPos);
