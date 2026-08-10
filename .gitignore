@@ -2,4 +2,5 @@ run/
 build/
 .idea/
 .claude/
+docs/
 CLAUDE.local.md

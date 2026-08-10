@@ -24,7 +24,7 @@ public abstract class ModeBasedItem extends Item {
     private boolean isHolding = false;
     private int heldTicks = 0;
 
-    private static final int HOLD_THRESHOLD = 1;
+    private static final int HOLD_THRESHOLD = 2;
 
     public ModeBasedItem(Properties properties) {
         super(properties);

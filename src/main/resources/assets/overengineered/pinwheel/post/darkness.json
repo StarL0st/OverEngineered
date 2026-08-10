@@ -1,0 +1,9 @@
+{
+  "stages": [
+    {
+      "type": "veil:blit",
+      "shader": "overengineered:darkness_shader",
+      "in": "minecraft:main"
+    }
+  ]
+}

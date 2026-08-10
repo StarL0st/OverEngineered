@@ -1,20 +1,32 @@
 package com.starl0stgaming.overengineered.core.events;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.starl0stgaming.overengineered.Overengineered;
 import com.starl0stgaming.overengineered.client.OverengineeredClient;
 import com.starl0stgaming.overengineered.client.render.fluxa.GridRenderer;
 import com.starl0stgaming.overengineered.core.fluxa.item.ModeBasedItem;
 import com.starl0stgaming.overengineered.core.fluxa.item.mode.CreateMode;
+import foundry.veil.api.client.render.VeilRenderSystem;
+import foundry.veil.api.client.render.light.data.PointLightData;
+import foundry.veil.api.client.render.light.data.SpotLightData;
+import foundry.veil.api.client.render.light.renderer.LightRenderHandle;
+import net.minecraft.client.KeyMapping;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+import net.neoforged.neoforge.client.settings.KeyConflictContext;
+import org.joml.Random;
+import org.joml.Vector3d;
+import org.joml.Vector3dc;
 import org.lwjgl.glfw.GLFW;
 
 @EventBusSubscriber(modid = Overengineered.MODID, value = Dist.CLIENT)
 public class ClientEvents {
+
+
 
     @SubscribeEvent
     public static void onRenderLevelStage(RenderLevelStageEvent event) {
@@ -27,6 +39,8 @@ public class ClientEvents {
     public static void onTickPre(ClientTickEvent.Pre event) {
         GridRenderer.getInstance().onTick();
     }
+
+
 
     @SubscribeEvent
     public static void onMouseScroll(InputEvent.MouseScrollingEvent event) {

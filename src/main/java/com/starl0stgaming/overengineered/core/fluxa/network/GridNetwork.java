@@ -1,13 +1,11 @@
 package com.starl0stgaming.overengineered.core.fluxa.network;
 
-import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.starl0stgaming.overengineered.Overengineered;
 import com.starl0stgaming.overengineered.core.fluxa.grid.GridCalculator;
 import com.starl0stgaming.overengineered.core.fluxa.grid.GridNode;
 
-import com.starl0stgaming.overengineered.core.fluxa.grid.GridPosition;
 import com.starl0stgaming.overengineered.util.AABBUtil;
 import com.starl0stgaming.overengineered.util.OEUtil;
 import net.minecraft.core.UUIDUtil;
@@ -15,7 +13,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class GridNetwork {
     private HashMap<UUID, GridNode> nodes;
@@ -97,6 +94,52 @@ public class GridNetwork {
         return true;
     }
 
+    public Set<UUID> neighbors(UUID node) {
+        return this.nodes.get(node).getNeighbors();
+    }
+
+    public void bfs(UUID start, NodeVisitor visitor) {
+        if(!nodes.containsKey(start)) return;
+
+        Set<UUID> visited = new HashSet<>();
+        Deque<UUID> frontier = new ArrayDeque<>();
+        frontier.add(start);
+        visited.add(start);
+
+        int depth = 0;
+        while(!frontier.isEmpty()) {
+            int levelSize = frontier.size();
+            for(int i = 0; i < levelSize; i++) {
+                UUID id = frontier.poll();
+                GridNode node = nodes.get(id);
+                if(node == null) continue;
+                if(!visitor.visit(node, depth)) return;
+                for(UUID neighbor : node.getNeighbors()) {
+                    if(visited.add(neighbor)) {
+                        frontier.add(neighbor);
+                    }
+                }
+                depth++;
+            }
+        }
+    }
+
+    public List<Set<UUID>> connectedComponents() {
+        List<Set<UUID>> components = new ArrayList<>();
+        Set<UUID> seen = new HashSet<>();
+        for(UUID id : nodes.keySet()) {
+            if(seen.contains(id)) continue;
+            Set<UUID> component = new HashSet<>();
+            bfs(id, (node, depth) -> {
+                component.add(node.getIdentifier());
+                return true;
+            });
+            seen.addAll(component);
+            components.add(component);
+        }
+        return components;
+    }
+
     private void handleMergingConnection(UUID ourNode, UUID otherNode) {
 
     }
@@ -129,5 +172,10 @@ public class GridNetwork {
                         UUIDUtil.CODEC.fieldOf("first").forGetter(UUIDPair::first),
                         UUIDUtil.CODEC.fieldOf("second").forGetter(UUIDPair::second)
                 ).apply(instance, UUIDPair::new));
+    }
+
+    @FunctionalInterface
+    public interface NodeVisitor {
+        boolean visit(GridNode node, int depth);
     }
 }

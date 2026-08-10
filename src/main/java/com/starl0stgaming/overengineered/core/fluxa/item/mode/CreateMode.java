@@ -4,30 +4,25 @@ import com.starl0stgaming.overengineered.Overengineered;
 import com.starl0stgaming.overengineered.client.OverengineeredClient;
 import com.starl0stgaming.overengineered.client.render.fluxa.GridRenderer;
 import com.starl0stgaming.overengineered.core.fluxa.grid.GridCalculator;
-import com.starl0stgaming.overengineered.core.fluxa.grid.GridNode;
 import com.starl0stgaming.overengineered.core.fluxa.grid.GridPosition;
 import com.starl0stgaming.overengineered.core.fluxa.item.ModeBasedItem;
 import com.starl0stgaming.overengineered.core.networking.payload.CreateGridNodePayload;
 import net.createmod.catnip.outliner.Outliner;
 import net.createmod.catnip.theme.Color;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 
 public class CreateMode extends Mode {
     private boolean selectionMode;
@@ -41,17 +36,14 @@ public class CreateMode extends Mode {
         ));
     }
 
-    public boolean isInSelectionMode() {
-        return selectionMode;
-    }
-
     @Override
     public InteractionResult onUse(ModeContext ctx) {
+        assert OverengineeredClient.MC_CLIENT.hitResult != null;
         var pos = GridCalculator.getNearestWorldPos(OverengineeredClient.MC_CLIENT.hitResult.getLocation());
         if (!ctx.level().isClientSide) return InteractionResult.PASS;
         switch (ctx.state()) {
             case SINGLE_CLICK -> {
-                if (!GridRenderer.getInstance().getRenderNodes().values().stream().anyMatch(node -> Objects.equals(node.getPosition(), GridCalculator.toGridPosition(pos)))) {
+                if (GridRenderer.getInstance().getRenderNodes().values().stream().noneMatch(node -> Objects.equals(node.getPosition(), GridCalculator.toGridPosition(pos))) || start != null) {
                     PacketDistributor.sendToServer(
                             new CreateGridNodePayload(
                                     ctx.level().dimension(),
@@ -60,9 +52,36 @@ public class CreateMode extends Mode {
                             )
                     );
                 } else {
-                    ctx.player().displayClientMessage(Component.literal("Can't place node here"), true);
+                    if(this.start == null) {
+                        this.start = GridCalculator.toGridPosition(pos);
+                    } else {
+                        var end = GridCalculator.toGridPosition(pos);
+                        boolean startExists = GridRenderer.getInstance()
+                                .getRenderNodes()
+                                .values()
+                                .stream()
+                                .anyMatch(n -> n.getPosition().equals(start));
+
+                        boolean endExists = GridRenderer.getInstance()
+                                .getRenderNodes()
+                                .values()
+                                .stream()
+                                .anyMatch(n -> n.getPosition().equals(end));
+
+                        if(startExists && !endExists) {
+                            PacketDistributor.sendToServer(
+                                    new CreateGridNodePayload(
+                                            ctx.level().dimension(),
+                                            start,
+                                            Optional.of(end)
+                                    )
+                            );
+
+                            start = null;
+
+                        }
+                    }
                 }
-                break;
             }
             case HOLDING -> {
                if(start == null) {
@@ -100,20 +119,7 @@ public class CreateMode extends Mode {
                         .stream()
                         .anyMatch(n -> n.getPosition().equals(end));
 
-                // CASE 1: single new node
-                if (!selectionMode || start.equals(end)) {
-
-                    PacketDistributor.sendToServer(
-                            new CreateGridNodePayload(
-                                    ctx.level().dimension(),
-                                    start,
-                                    Optional.empty()
-                            )
-                    );
-
-                }
-                // CASE 2: start is existing node → connect new node to its network
-                else if (startExists && !endExists) {
+                if (startExists && !endExists) {
 
                     PacketDistributor.sendToServer(
                             new CreateGridNodePayload(
@@ -122,10 +128,9 @@ public class CreateMode extends Mode {
                                     Optional.of(end)
                             )
                     );
-
                 }
                 // CASE 3: both exist → connect existing nodes
-                else if (startExists && endExists) {
+                else if (startExists) {
 
                     PacketDistributor.sendToServer(
                             new CreateGridNodePayload(
@@ -167,6 +172,7 @@ public class CreateMode extends Mode {
         if(entity instanceof Player player && player.isHolding(iStack -> iStack.getItem() instanceof ModeBasedItem)) {
             if(!level.isClientSide) return;
 
+            assert OverengineeredClient.MC_CLIENT.hitResult != null;
             Vec3 closestLookingNode = GridCalculator.getNearestWorldPos(OverengineeredClient.MC_CLIENT.hitResult);
             if(!selectionMode) {
                 Outliner.getInstance().chaseAABB(player.getStringUUID(),
